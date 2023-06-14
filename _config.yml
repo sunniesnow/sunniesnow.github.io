@@ -1,0 +1,24 @@
+---
+title: Sunniesnow
+author: UlyssesZhan
+timezone: America/Los_Angeles
+lang: en-US
+description: The web rhythm game
+locale: en_US
+logo: 'https://github.com/sunniesnow/logo/releases/download/v1.0/logo.ico'
+baseurl: ''
+url: https://sunniesnow.github.io
+domain: sunniesnow.github.io
+markdown: kramdown
+kramdown:
+  auto_ids: true
+exclude:
+  - LICENSE
+  - LICENSE.md
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - ".git/"
+  - ".idea/"
+  - ".rubocop.yml"
+
