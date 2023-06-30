@@ -13,12 +13,12 @@ markdown: kramdown
 kramdown:
   auto_ids: true
 exclude:
-  - LICENSE
-  - LICENSE.md
-  - README.md
+  - "**/LICENSE"
+  - "**/LICENSE.md"
+  - "**/README.md"
   - Gemfile
   - Gemfile.lock
-  - ".git/"
-  - ".idea/"
+  - "**/.git/"
+  - "**/.idea/"
   - ".rubocop.yml"
 
