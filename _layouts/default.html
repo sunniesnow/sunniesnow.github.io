@@ -1,8 +1,11 @@
 <!doctype html>
-<html>
+<html lang="{{ page.lang | default: site.lang | default: "en-US" }}">
 	<head>
 		<meta charset="utf-8">
 		<link rel="icon" href="{{ site.logo }}">
+		{% if page.head %}
+			{% include_relative {{ page.head }} %}
+		{% endif %}
 		<title>{{ page.title }}</title>
 	</head>
 	<body>
