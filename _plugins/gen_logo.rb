@@ -10,11 +10,15 @@ module Jekyll
 		safe true
 		priority :low
 		def generate site
-			site.pages.push UlyssesZhan::Logo.new site
+			site.pages.push UlyssesZhan::LogoIco.new site
+			site.pages.push UlyssesZhan::LogoSvg.new site
 		end
 	end
 
-	class UlyssesZhan::Logo < Page
+	class UlyssesZhan::LogoIco < Page
+
+		URL = 'https://github.com/sunniesnow/logo/releases/download/v1.1/logo.ico'
+
 		def initialize site
 			@site = site
 			@base = site.source
@@ -22,7 +26,22 @@ module Jekyll
 			@name = 'favicon.ico'
 			process @name
 			@data = {}
-			@content = URI.open site.config['logo'], &:read
+			@content = URI.open URL, &:read
+		end
+	end
+
+	class UlyssesZhan::LogoSvg < Page
+
+		URL = 'https://github.com/sunniesnow/logo/releases/download/v1.1/logo.svg'
+
+		def initialize site
+			@site = site
+			@base = site.source
+			@dir = '.'
+			@name = 'favicon.svg'
+			process @name
+			@data = {}
+			@content = URI.open URL, &:read
 		end
 	end
 end
