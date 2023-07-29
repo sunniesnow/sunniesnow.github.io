@@ -3,10 +3,12 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="theme-color" content="{{ site.theme_color }}" />
 		{% if page.head %}
 			{% include_relative {{ page.head }} %}
 		{% endif %}
 		<title>{{ page.title }}</title>
+		{% seo title=false %}
 	</head>
 	<body>
 		{{ content }}

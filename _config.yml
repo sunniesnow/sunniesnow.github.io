@@ -8,9 +8,17 @@ locale: en_US
 baseurl: ''
 url: https://sunniesnow.github.io
 domain: sunniesnow.github.io
+logo: /favicon.svg
+theme_color: '#ffa520'
+
 markdown: kramdown
 kramdown:
   auto_ids: true
+defaults:
+  - scope:
+      path: ''
+    values:
+      image: /favicon.svg
 exclude:
   - "**/LICENSE"
   - "**/LICENSE.md"
@@ -20,4 +28,5 @@ exclude:
   - "**/.git/"
   - "**/.idea/"
   - ".rubocop.yml"
-
+plugins:
+  - jekyll-seo-tag

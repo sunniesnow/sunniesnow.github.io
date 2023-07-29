@@ -1,6 +1,7 @@
 ---
 layout: default
-title: Sunniesnow
+title: Homepage of Sunniesnow
+description: Homepage of Sunniesnow, the web rhythm game
 ---
 
 # {{ page.title }}
@@ -12,4 +13,3 @@ title: Sunniesnow
 ## Chart maker
 
 [link](/maker).
-
