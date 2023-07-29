@@ -10,38 +10,24 @@ module Jekyll
 		safe true
 		priority :low
 		def generate site
-			site.pages.push UlyssesZhan::LogoIco.new site
-			site.pages.push UlyssesZhan::LogoSvg.new site
+			site.pages.push UlyssesZhan::Logo.new 'ico', site
+			site.pages.push UlyssesZhan::Logo.new 'svg', site
+			site.pages.push UlyssesZhan::Logo.new 'png', site
 		end
 	end
 
-	class UlyssesZhan::LogoIco < Page
+	class UlyssesZhan::Logo < Page
 
-		URL = 'https://github.com/sunniesnow/logo/releases/download/v1.1/logo.ico'
+		URL_WITHOUT_EXTENSION = 'https://github.com/sunniesnow/logo/releases/download/v1.1/logo'
 
-		def initialize site
+		def initialize extension, site
 			@site = site
 			@base = site.source
 			@dir = '.'
-			@name = 'favicon.ico'
+			@name = "favicon.#{extension}"
 			process @name
 			@data = {}
-			@content = URI.open URL, &:read
-		end
-	end
-
-	class UlyssesZhan::LogoSvg < Page
-
-		URL = 'https://github.com/sunniesnow/logo/releases/download/v1.1/logo.svg'
-
-		def initialize site
-			@site = site
-			@base = site.source
-			@dir = '.'
-			@name = 'favicon.svg'
-			process @name
-			@data = {}
-			@content = URI.open URL, &:read
+			@content = URI.open "#{URL_WITHOUT_EXTENSION}.#{extension}", &:read
 		end
 	end
 end
