@@ -13,3 +13,7 @@ description: Homepage of Sunniesnow, the web rhythm game
 ## Chart maker
 
 [link](/maker).
+
+## Level file format specifications
+
+[link](/doc).

@@ -10,9 +10,13 @@ module Jekyll
 		safe true
 		priority :low
 		def generate site
-			site.pages.push UlyssesZhan::Logo.new 'ico', site
-			site.pages.push UlyssesZhan::Logo.new 'svg', site
-			site.pages.push UlyssesZhan::Logo.new 'png', site
+			push_logo site, 'ico'
+			push_logo site, 'svg'
+			push_logo site, 'png'
+		end
+
+		def push_logo site, extension
+			site.static_files.push UlyssesZhan::Logo.new extension, site
 		end
 	end
 
@@ -27,7 +31,15 @@ module Jekyll
 			@name = "favicon.#{extension}"
 			process @name
 			@data = {}
-			@content = URI.open "#{URL_WITHOUT_EXTENSION}.#{extension}", &:read
+			@content = get_content
+		end
+
+		def get_content
+			unless File.exist? File.join 'tmp', @name
+				FileUtils.mkdir_p 'tmp'
+				File.write File.join('tmp', @name), URI.open(URL_WITHOUT_EXTENSION + @ext, &:read)
+			end
+			File.read File.join 'tmp', @name
 		end
 	end
 end
