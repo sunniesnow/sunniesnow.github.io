@@ -37,7 +37,7 @@ module Jekyll
 		def download_contents
 			return if File.exist? path
 			FileUtils.mkdir_p File.dirname path
-			URI.open URL_WITHOUT_EXTENSION + @ext do |r|
+			URI.open URL_WITHOUT_EXTENSION + @extname do |r|
 				File.write path, r.read
 			end
 		end
