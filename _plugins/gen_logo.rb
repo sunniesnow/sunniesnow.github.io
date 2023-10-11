@@ -20,26 +20,26 @@ module Jekyll
 		end
 	end
 
-	class UlyssesZhan::Logo < Page
+	class UlyssesZhan::Logo < StaticFile
 
 		URL_WITHOUT_EXTENSION = 'https://github.com/sunniesnow/logo/releases/download/v1.1/logo'
+		TEMP_DIR = '_tmp'
 
 		def initialize extension, site
-			@site = site
-			@base = site.source
-			@dir = '.'
-			@name = "favicon.#{extension}"
-			process @name
-			@data = {}
-			@content = get_content
+			super site, site.source, '.', "favicon.#{extension}"
+			download_contents
 		end
 
-		def get_content
-			unless File.exist? File.join 'tmp', @name
-				FileUtils.mkdir_p 'tmp'
-				File.write File.join('tmp', @name), URI.open(URL_WITHOUT_EXTENSION + @ext, &:read)
+		def path
+			@path ||= File.join TEMP_DIR, @name
+		end
+
+		def download_contents
+			return if File.exist? path
+			FileUtils.mkdir_p File.dirname path
+			URI.open URL_WITHOUT_EXTENSION + @ext do |r|
+				File.write path, r.read
 			end
-			File.read File.join 'tmp', @name
 		end
 	end
 end

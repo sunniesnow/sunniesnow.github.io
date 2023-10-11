@@ -7,10 +7,10 @@ require 'jekyll'
 
 module Jekyll
 	module Katex
-		PATH = 'tmp/katex.min.js'
+		PATH = '_tmp/katex.min.js'
 		uri = 'https://fastly.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js'
 		unless File.exist? PATH
-			FileUtils.mkdir_p 'tmp'
+			FileUtils.mkdir_p '_tmp'
 			File.write PATH, URI.open(uri, &:read)
 		end
 		KATEX_JS ||= ExecJS.compile File.read PATH

@@ -15,7 +15,7 @@ markdown: kramdown
 kramdown:
   auto_ids: true
 katex:
-  js_path: tmp
+  js_path: _tmp
 defaults:
   - scope:
       path: ''

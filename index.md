@@ -6,6 +6,8 @@ description: Homepage of Sunniesnow, the web rhythm game
 
 # {{ page.title }}
 
+[Join the Discord server for Sunniesnow!](https://discord.gg/6ZHRU9teju){:target="_blank"}
+
 ## The game
 
 [link](/game).
