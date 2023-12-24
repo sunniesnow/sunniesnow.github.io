@@ -103,7 +103,8 @@ Here is a list of possible values:
 - [`"checkerboard"`](#checkerboard),
 - [`"diamondGrid"`](#diamond-grid),
 - [`"pentagon"`](#pentagon),
-- [`"turntable"`](#turntable).
+- [`"turntable"`](#turntable),
+- [`"hexagram"`](#hexagram).
 
 See [Event types](#event-types) for more information.
 
@@ -372,6 +373,22 @@ that are displayed in the center of the screen.
 {% katexmm %}
 The turntable has two circles concentric at $(0,0)$.
 Their radii are respectively $25$ and $50$.
+{% endkatexmm %}
+
+### Hexagram
+
+- **`type`**: `"hexagram"`.
+- **Types of entries of `properties`**:
+  - **`duration` (optional)**: non-negative float number (default: `0.0`).
+
+A `hexagram` event is a hexagram.
+It is one kind of background patterns
+that are displayed in the center of the screen.
+
+{% katexmm %}
+The turntable consists of two triangles whose centers are both $(0,0)$
+and radii are both $50$ (side lengths $25\sqrt3$).
+One of the triangles is upright, and the other is upside-down.
 {% endkatexmm %}
 
 ## Coordinate system
