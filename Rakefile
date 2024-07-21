@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 task :serve do |t|
-	exec 'bundle exec jekyll serve --incremental --host 0.0.0.0'
+	exec 'bundle exec jekyll serve --incremental --host 0.0.0.0 --port 4000 --livereload'
 end
 
 task :build do |t|
