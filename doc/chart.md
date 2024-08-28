@@ -71,6 +71,31 @@ In Lyrica equivalents, possible values are decimal representations
 of any integers from 1 to 13.
 However, you are free to use other values.
 
+### `difficultySup`
+
+- **Type**: string.
+- **Default**: `""`.
+
+A superscript shown near the difficulty.
+Usually either an empty string or `"+"`.
+
+### `offset`
+
+- **Type**: float number.
+- **Default**: `0.0`.
+
+The offset of the chart, in seconds.
+**Usually, this should be zero.**
+This is only used by chart reviewers to adjust the offset after the chart is already made.
+Chart makers should generally avoid using this and leave it as zero.
+
+### `sscharter`
+
+- **Type**: `null`, or an object with properties: `version` a string, and `port` an integer.
+- **Default**: `null`.
+
+Used for sscharter integration.
+
 ### `events`
 
 - **Type**: non-empty array of event objects.
