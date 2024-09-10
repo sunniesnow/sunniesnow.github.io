@@ -4,3 +4,6 @@
 [submodule "maker"]
 	path = maker
 	url = https://github.com/sunniesnow/sunniesnow-maker
+[submodule "doc/sscharter"]
+	path = doc/sscharter
+	url = https://github.com/sunniesnow/sscharter
