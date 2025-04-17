@@ -1,0 +1,11 @@
+[ v3_req ]
+subjectAltName = @alt_names
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+
+[ alt_names ]
+DNS.1 = sunniesnow.github.io
+DNS.2 = localhost
+DNS.3 = jekyll.local
+IP.1 = 127.0.0.1
+IP.2 = 0.0.0.0

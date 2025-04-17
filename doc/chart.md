@@ -22,7 +22,7 @@ see [the chart of Sunniesnow Sample](https://github.com/sunniesnow/sunniesnow-sa
 
 At the top level of the JSON structure,
 it is an object with the following keys.
-All of them are required,
+Required keys are `title`, `artist`, `charter`, `difficultyName`, `difficultyColor`, `difficulty`, and `events`,
 although missing values often just trigger a warning instead of an error.
 
 ### `title`
@@ -263,7 +263,7 @@ See [Tip points](#tip-points) for more information.
   - **`tipPoint` (optional)**: nullable string (default: `null`).
   - **`text` (optional)**: string (default: `""`).
 
-A `bgNote` event is a background note (often called a "ink" by Lyrica players).
+A `bgNote` event is a background note (often called an "ink" by Lyrica players).
 
 Its coordinates are specified by `x` and `y`
 (see [Coordinate system](#coordinate-system) for more information).
