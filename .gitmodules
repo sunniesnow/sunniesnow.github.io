@@ -7,3 +7,6 @@
 [submodule "doc/sscharter"]
 	path = doc/sscharter
 	url = https://github.com/sunniesnow/sscharter
+[submodule "game-unstable"]
+	path = game-unstable
+	url = https://github.com/sunniesnow/sunniesnow.git

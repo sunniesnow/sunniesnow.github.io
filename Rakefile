@@ -9,9 +9,9 @@ task :serve do |t|
 			system 'openssl req -new -nodes -keyout _ssl/server.key -out _ssl/server.csr -config _ssl/server.cnf'
 			system 'openssl x509 -req -in _ssl/server.csr -days 31227 -CA _ssl/ca.crt -CAkey _ssl/ca.key -CAcreateserial -out _ssl/server.crt -extensions v3_req -extfile _ssl/sign.cnf'
 		end
-		additional_options = '--ssl-key _ssl/server.key --ssl-cert _ssl/server.crt'
+		additional_options += ' --ssl-key _ssl/server.key --ssl-cert _ssl/server.crt'
 	end
-	exec "jekyll serve --incremental --host 0.0.0.0 --port 4000 #{additional_options}"
+	exec "jekyll serve --incremental --host 0.0.0.0 --port 4000#{additional_options}"
 end
 
 task :build do |t|
