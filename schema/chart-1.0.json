@@ -1,6 +1,66 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://sunniesnow.github.io/schema/chart-1.0.json",
+	"$defs": {
+		"stringTimeDependentProperty": {
+			"type": "object",
+			"properties": {
+				"value": { "type": "string" },
+				"dataPoints": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["time", "value"],
+						"properties": {
+							"time": { "type": "number" },
+							"value": { "type": "string" }
+						},
+						"additionalProperties": false
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"uninterpolableNumberTimeDependentProperty": {
+			"type": "object",
+			"properties": {
+				"value": { "type": "number" },
+				"dataPoints": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["time", "value"],
+						"properties": {
+							"time": { "type": "number" },
+							"value": { "type": "number" }
+						},
+						"additionalProperties": false
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"numberTimeDependentProperty": {
+			"type": "object",
+			"properties": {
+				"value": { "type": "number" },
+				"speed": { "type": "number" },
+				"dataPoints": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["time", "value"],
+						"properties": {
+							"time": { "type": "number" },
+							"value": { "type": "number" }
+						},
+						"additionalProperties": false
+					}
+				}
+			},
+			"additionalProperties": false
+		}
+	},
 	"title": "Sunniesnow Chart",
 	"type": "object",
 	"required": [
@@ -35,7 +95,7 @@
 		},
 		"offset": {
 			"type": "number",
-			"default": 0.0,
+			"default": 0,
 			"description": "The offset of the chart, in seconds. Usually, this should be zero. This is only used by chart reviewers to adjust the offset after the chart is already made. Chart makers should generally avoid using this and leave it as zero."
 		},
 		"sscharter": { "default": null, "oneOf": [
@@ -75,102 +135,245 @@
 							"diamondGrid",
 							"pentagon",
 							"turntable",
-							"hexagram"
+							"hexagram",
+							"image",
+							"globalSpeed"
 						]
 					},
 					"time": { "type": "number", "description": "This specifies the time of the event, in seconds, measured from the start of the music." },
 					"properties": { "type": "object" },
-					"allOf": [ {
-						"if": { "properties": { "type": { "const": "tap" } } },
-						"then": { "properties": { "properties": { "properties": {
-							"properties": {
-								"x": { "type": "number" },
-								"y": { "type": "number" },
-								"tipPoint": { "type": ["string", "null"], "default": null },
-								"text": { "type": "string", "default": "" }
-							},
-							"required": ["x", "y"],
-							"additionalProperties": false
-						} } } }
-					}, {
-						"if": { "properties": { "type": { "const": "hold" } } },
-						"then": { "properties": { "properties": { "properties": {
-							"properties": {
-								"x": { "type": "number" },
-								"y": { "type": "number" },
-								"duration": { "type": "number", "exclusiveMinimum": 0 },
-								"tipPoint": { "type": ["string", "null"], "default": null },
-								"text": { "type": "string", "default": "" }
-							},
-							"required": ["x", "y", "duration"],
-							"additionalProperties": false
-						} } } }
-					}, {
-						"if": { "properties": { "type": { "const": "drag" } } },
-						"then": { "properties": { "properties": { "properties": {
-							"properties": {
-								"x": { "type": "number" },
-								"y": { "type": "number" },
-								"tipPoint": { "type": ["string", "null"], "default": null }
-							},
-							"required": ["x", "y"],
-							"additionalProperties": false
-						} } } }
-					}, {
-						"if": { "properties": { "type": { "const": "flick" } } },
-						"then": { "properties": { "properties": { "properties": {
-							"properties": {
-								"x": { "type": "number" },
-								"y": { "type": "number" },
-								"angle": { "type": "number" },
-								"tipPoint": { "type": ["string", "null"], "default": null },
-								"text": { "type": "string", "default": "" }
-							},
-							"required": ["x", "y", "angle"],
-							"additionalProperties": false
-						} } } }
-					}, {
-						"if": { "properties": { "type": { "const": "placeholder" } } },
-						"then": { "properties": { "properties": { "properties": {
-							"properties": {
-								"x": { "type": "number" },
-								"y": { "type": "number" },
-								"tipPoint": { "type": ["string", "null"], "default": null }
-							},
-							"required": ["x", "y"],
-							"additionalProperties": false
-						} } } }
-					}, {
-						"if": { "properties": { "type": { "const": "bgNote" } } },
-						"then": { "properties": { "properties": { "properties": {
-							"properties": {
-								"x": { "type": "number" },
-								"y": { "type": "number" },
-								"duration": { "type": "number", "minimum": 0.0, "default": 0.0 },
-								"tipPoint": { "type": ["string", "null"], "default": null },
-								"text": { "type": "string", "default": "" }
-							},
-							"required": ["x", "y"],
-							"additionalProperties": false
-						} } } }
-					}, {
-						"if": { "properties": { "type": { "enum": [
-							"grid",
-							"hexagon",
-							"checkerboard",
-							"diamondGrid",
-							"pentagon",
-							"turntable",
-							"hexagram"
-						] } } },
-						"then": { "properties": { "properties": { "properties": {
-							"properties": {
-								"duration": { "type": "number", "minimum": 0.0, "default": 0.0 }
-							},
-							"additionalProperties": false
-						} } } }
-					} ]
-				}
+					"timeDependent": { "type": "object" }
+				},
+				"oneOf": [ { "properties": {
+					"type": { "const": "tap" },
+					"properties": {
+						"properties": {
+							"x": { "type": "number" },
+							"y": { "type": "number" },
+							"tipPoint": { "type": ["string", "null"], "default": null },
+							"text": { "type": "string", "default": "" },
+							"size": { "type": "number", "minimum": 0, "default": 1 }
+						},
+						"required": ["x", "y"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "const": "hold" },
+					"properties": {
+						"properties": {
+							"x": { "type": "number" },
+							"y": { "type": "number" },
+							"duration": { "type": "number", "exclusiveMinimum": 0 },
+							"tipPoint": { "type": ["string", "null"], "default": null },
+							"text": { "type": "string", "default": "" },
+							"size": { "type": "number", "minimum": 0, "default": 1 }
+						},
+						"required": ["x", "y", "duration"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "const": "drag" },
+					"properties": {
+						"properties": {
+							"x": { "type": "number" },
+							"y": { "type": "number" },
+							"tipPoint": { "type": ["string", "null"], "default": null },
+							"size": { "type": "number", "minimum": 0, "default": 1 }
+						},
+						"required": ["x", "y"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "const": "flick" },
+					"properties": {
+						"properties": {
+							"x": { "type": "number" },
+							"y": { "type": "number" },
+							"angle": { "type": "number" },
+							"tipPoint": { "type": ["string", "null"], "default": null },
+							"text": { "type": "string", "default": "" },
+							"size": { "type": "number", "minimum": 0, "default": 1 }
+						},
+						"required": ["x", "y", "angle"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "const": "placeholder" },
+					"properties": {
+						"properties": {
+							"x": { "type": "number" },
+							"y": { "type": "number" },
+							"tipPoint": { "type": ["string", "null"], "default": null }
+						},
+						"required": ["x", "y"],
+						"additionalProperties": false
+					}, 
+					"timeDependent": {
+						"properties": {},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "const": "bgNote" },
+					"properties": {
+						"properties": {
+							"x": { "type": "number" },
+							"y": { "type": "number" },
+							"duration": { "type": "number", "minimum": 0, "default": 0 },
+							"tipPoint": { "type": ["string", "null"], "default": null },
+							"text": { "type": "string", "default": "" },
+							"size": { "type": "number", "minimum": 0, "default": 1 }
+						},
+						"required": ["x", "y"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "enum": [
+						"grid",
+						"hexagon",
+						"checkerboard",
+						"diamondGrid",
+						"pentagon",
+						"turntable",
+						"hexagram"
+					] },
+					"properties": {
+						"properties": {
+							"duration": { "type": "number", "minimum": 0, "default": 0 }
+						},
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "const": "bigText" },
+					"properties": {
+						"properties": {
+							"text": { "type": "string", "minLength": 1 },
+							"duration": { "type": "number", "minimum": 0, "default": 0 }
+						},
+						"required": ["text"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "const": "image" },
+					"properties": {
+						"properties": {
+							"filename": { "type": "string", "minLength": 1 },
+							"width": { "type": "number" },
+							"height": { "type": "number" },
+							"duration": { "type": "number", "exlusiveMinimum": 0 },
+							"x": { "type": "number", "default": 0 },
+							"y": { "type": "number", "default": 0 }
+						},
+						"required": ["filename", "width", "duration"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"z": { "$ref": "#/$defs/uninterpolableNumberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"width": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"height": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"anchorX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"anchorY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				} }, { "properties": {
+					"type": { "const": "globalSpeed" },
+					"properties": {
+						"properties": {
+							"speed": { "type": "number" }
+						},
+						"required": ["speed"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {},
+						"additionalProperties": false
+					}
+				} } ]
 			}
 		}
 	}

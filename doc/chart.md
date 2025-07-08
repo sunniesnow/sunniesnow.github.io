@@ -106,9 +106,9 @@ see [Event object](#event-object).
 
 ## Event object
 
-An event object is an object with the following keys.
-All of them are required.
-Missing values will trigger a warning, and this event object will be ignored.
+An event object is an object with the required keys `type`, `time`, and `properties`,
+and optional keys `timeDependent`.
+Missing a required key will trigger a warning, and this event object will be ignored.
 
 ### `type`
 
@@ -129,7 +129,9 @@ Here is a list of possible values:
 - [`"diamondGrid"`](#diamond-grid),
 - [`"pentagon"`](#pentagon),
 - [`"turntable"`](#turntable),
-- [`"hexagram"`](#hexagram).
+- [`"hexagram"`](#hexagram),
+- [`"image"`](#image),
+- [`"globalSpeed"`](#global-speed),
 
 See [Event types](#event-types) for more information.
 
@@ -155,6 +157,104 @@ and this event object will be ignored.
 If there are unknown entries, a warning will be triggered.
 See [Event types](#event-types) for more information.
 
+### `timeDependent`
+
+- **Type**: object.
+
+It is used to make the event appear moving, changing size, etc.,
+but it does not affect the judgement.
+Each type of events has its own supported keys in `timeDependent`,
+and all of them are optional.
+Any additional keys will trigger a warning and be ignored.
+The value of each entry in the `timeDependent` object is of one of the following three types:
+
+- **(uninterpolable) string**:
+  an object with optional keys `value` and `dataPoints`,
+  where `value` is a string, and `dataPoints` is an array of objects with keys `time` and `value`,
+  where `time` is a float number and `value` is a string.
+- **uninterpolable number**:
+  an object with optional keys `value` and `dataPoints`,
+  where `value` is a float number, and `dataPoints` is an array of objects with keys `time` and `value`,
+  where `time` and `value` are float numbers.
+- **(interpolable) number**:
+  an object with optional keys `speed`, `value` and `dataPoints`,
+  where `speed` and `value` are float numbers, and `dataPoints` is an array of objects with keys `time`, `value`,
+  where `time` and `value` are float numbers.
+
+For an uninterpolable time-dependent property,
+the top-level `value` is the value of the property before the earliest `time` in `dataPoints`.
+Then, each item in `dataPoints` makes an abrupt change at the specified `time`
+into the specified `value`.
+
+For an interpolable time-dependent property,
+the top-level `value` is the value of the property **right before**
+the [`time`](#time) of the event itself.
+The items in `dataPoints`, together with the top-level `value`,
+defines a piecewise linear function
+that specifies how the property changes over time.
+There can be different data points with the same time,
+which makes the property change abruptly at that time.
+The rate of change of the property before the earliest `time` in `dataPoints`
+is specified by `speed`.
+The value of the property after the latest `time` in `dataPoints`
+is kept the same as the value at the latest `time`.
+
+In [event types](#event-types),
+the supported keys of `timeDependent` for each type of event
+and their corresponding types and their default `value`s and `speed`s are documented.
+If the default `value` is not specified,
+it is taken from the value in the entry in `properties` with the same key.
+
+Some of the supported keys are shared by multiple types of events.
+To avoid verbosity, they are documented here,
+and will not be explained again in the event types.
+
+### `x`, `y`
+
+They are used to change the spatial coordinates of the event
+so that it can appear moving.
+They share the same coordinate system as the `x` and `y` in `properties`
+(see [Coordinate system](#coordinate-system) for more information).
+Note that anything in `timeDependent` will not affect the judgement of the event,
+so even if the `x` and `y` values change over time,
+the judgement position is still the position specified by `x` and `y` in `properties`.
+
+### `circle`
+
+It is used to control the radius of the shrinking circle.
+When the value is `0.0`, the radius is at its minimum
+(coinciding with the note).
+The value at which the radius is at its maximum is dependent
+on the speed set by the player in the game settings.
+If the player sets the speed to `1.0`,
+then the value at which the radius is at its maximum is `-1.0`
+(it is negative because we want the circle to shrink when the speed is positive).
+This value is then inversely scaled by the speed set by the player
+in the game settings.
+When the value is smaller than the value at which the radius is at its maximum,
+the note is not shown at all.
+
+### `opacity`
+
+It is used to control the opacity of the event.
+When the value is `0.0`, the event is completely transparent,
+and when the value is `1.0`, the event is completely opaque.
+
+### `size`
+
+It is used to control the visual size of the event.
+When the value is `0.0`, the event is not shown at all,
+and when the value is `1.0`, the event is at its normal size.
+
+### `rotation`
+
+It is used to control the rotation of the event.
+It is in radians, and the positive direction is counterclockwise.
+
+### `text`
+
+It is used to control the text displayed on the event.
+
 ## Event types
 
 The following sections describe each different [`type`](#type) of event,
@@ -163,11 +263,20 @@ including how their [`properties`](#properties) are structured.
 ### Tap
 
 - **`type`**: `"tap"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`x`**: float number.
   - **`y`**: float number.
   - **`tipPoint` (optional)**: nullable string (default: `null`).
   - **`text` (optional)**: string (default: `""`).
+  - **`size` (optional)**: float number (default: `1.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`circle`**: number (default `value`: `0.0`; default `speed`: `1.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
+  - **`text`**: string.
 
 A `tap` event is a tap note.
 Its coordinates are specified by `x` and `y`
@@ -179,15 +288,26 @@ See [Tip points](#tip-points) for more information.
 
 The property `text` specifies the text displayed on the tap note.
 
+The property `size` scales the size of the judgement area.
+
 ### Hold
 
 - **`type`**: `"hold"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`x`**: float number.
   - **`y`**: float number.
   - **`duration`**: positive float number.
   - **`tipPoint` (optional)**: nullable string (default: `null`).
   - **`text` (optional)**: string (default: `""`).
+  - **`size` (optional)**: float number (default: `1.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`circle`**: number (default `value`: `0.0`; default `speed`: `1.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
+  - **`text`**: string.
 
 A `hold` event is a hold note.
 Its coordinates are specified by `x` and `y`
@@ -201,13 +321,23 @@ See [Tip points](#tip-points) for more information.
 
 The property `text` specifies the text displayed on the hold note.
 
+The property `size` scales the size of the judgement area.
+
 ### Drag
 
 - **`type`**: `"drag"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`x`**: float number.
   - **`y`**: float number.
   - **`tipPoint` (optional)**: nullable string (default: `null`).
+  - **`size` (optional)**: float number (default: `1.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`circle`**: number (default `value`: `0.0`; default `speed`: `1.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
 
 A `drag` event is a drag note.
 Its coordinates are specified by `x` and `y`
@@ -217,15 +347,26 @@ If `tipPoint` is not `null`,
 then the drag note will have a tip point.
 See [Tip points](#tip-points) for more information.
 
+The property `size` scales the size of the judgement area.
+
 ### Flick
 
 - **`type`**: `"flick"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`x`**: float number.
   - **`y`**: float number.
   - **`angle`**: float number.
   - **`tipPoint` (optional)**: nullable string (default: `null`).
   - **`text` (optional)**: string (default: `""`).
+  - **`size` (optional)**: float number (default: `1.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`circle`**: number (default `value`: `0.0`; default `speed`: `1.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
+  - **`text`**: string.
 
 A `flick` event is a flick note.
 Its coordinates are specified by `x` and `y`
@@ -241,13 +382,16 @@ See [Tip points](#tip-points) for more information.
 
 The property `text` specifies the text displayed on the flick note.
 
+The property `size` scales the size of the judgement area.
+
 ### Placeholder
 
 - **`type`**: `"placeholder"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`x`**: float number.
   - **`y`**: float number.
   - **`tipPoint` (optional)**: nullable string (default: `null`).
+- **`timeDependent`**: none.
 
 A `placeholder` event basically does nothing,
 but it can have a tip point by specifying `tipPoint`.
@@ -256,12 +400,21 @@ See [Tip points](#tip-points) for more information.
 ### Background note
 
 - **`type`**: `"bgNote"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`x`**: float number.
   - **`y`**: float number.
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
   - **`tipPoint` (optional)**: nullable string (default: `null`).
   - **`text` (optional)**: string (default: `""`).
+  - **`size` (optional)**: float number (default: `1.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`circle`**: number (default `value`: `0.0`; default `speed`: `1.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
+  - **`text`**: string.
 
 A `bgNote` event is a background note (often called an "ink" by Lyrica players).
 
@@ -276,12 +429,23 @@ See [Tip points](#tip-points) for more information.
 
 The property `text` specifies the text displayed on the background note.
 
+The property `size` does nothing
+(but it may be useful because it is the default `value` of the `size` option
+in `timeDependent`).
+
 ### Big text
 
 - **`type`**: `"bigText"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`text`**: string.
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
+  - **`text`**: string.
 
 A `bigText` event is a big text.
 It is one kind of background patterns
@@ -294,8 +458,14 @@ The property `duration` specifies the duration of the big text, in seconds.
 ### Grid
 
 - **`type`**: `"grid"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
 
 A `grid` event is a grid.
 It is one kind of background patterns
@@ -314,8 +484,14 @@ The property `duration` specifies the duration of the grid, in seconds.
 ### Hexagon
 
 - **`type`**: `"hexagon"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
 
 A `hexagon` event is a hexagon.
 It is one kind of background patterns
@@ -333,8 +509,14 @@ Here list the vertices of each of them:
 ### Checkerboard
 
 - **`type`**: `"checkerboard"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
 
 A `checkerboard` event is a checkerboard.
 It is one kind of background patterns
@@ -350,8 +532,14 @@ The side length of each cell is $25$.
 ### Diamond grid
 
 - **`type`**: `"diamondGrid"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
 
 A `diamondGrid` event is a diamond grid.
 It is one kind of background patterns
@@ -368,8 +556,14 @@ There are $35$ intersections in total.
 ### Pentagon
 
 - **`type`**: `"pentagon"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
 
 A `pentagon` event is a pentagon.
 It is one kind of background patterns
@@ -388,8 +582,14 @@ $$(0,50),\quad
 ### Turntable
 
 - **`type`**: `"turntable"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
 
 A `turntable` event is a turntable.
 It is one kind of background patterns
@@ -403,8 +603,14 @@ Their radii are respectively $25$ and $50$.
 ### Hexagram
 
 - **`type`**: `"hexagram"`.
-- **Types of entries of `properties`**:
+- **`properties`**:
   - **`duration` (optional)**: non-negative float number (default: `0.0`).
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`size`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
 
 A `hexagram` event is a hexagram.
 It is one kind of background patterns
@@ -415,6 +621,64 @@ The turntable consists of two triangles whose centers are both $(0,0)$
 and radii are both $50$ (side lengths $25\sqrt3$).
 One of the triangles is upright, and the other is upside-down.
 {% endkatexmm %}
+
+### Image
+
+- **`type`**: `"image"`.
+- **`properties`**:
+  - **`filename`**: non-empty string.
+  - **`x`**: float number.
+  - **`y`**: float number.
+  - **`width`**: float number.
+  - **`height` (optional)**: float number.
+  - **`duration`**: non-negative float number.
+- **`timeDependent`**:
+  - **`x`**: number (default `speed`: `0.0`).
+  - **`y`**: number (default `speed`: `0.0`).
+  - **`z`**: uninterpolable number (default `value`: `0.0`).
+  - **`opacity`**: number (default `value`: `1.0`; default `speed`: `0.0`).
+  - **`width`**: number (default `speed`: `0.0`).
+  - **`height`**: uninterpolable number (default `speed`: `0.0`).
+  - **`anchorX`**: uninterpolable number (default `value`: `0.5`).
+  - **`anchorY`**: uninterpolable number (default `value`: `0.5`).
+  - **`rotation`**: number (default `value`: `0.0`; default `speed`: `0.0`).
+
+Displaying an image.
+The image is shown below all the notes, background notes, and hit effects,
+but above all the background patterns.
+
+The properties `x` and `y` specify the coordinates of the image.
+The property `width` and `height` specify the size of the image.
+If `height` is omitted, it is set to keep the original aspect ratio of the image.
+The property `filename` specifies the filename of the image
+inside `story/` directory in the level file
+(special path components like `.` and `..` are not allowed).
+The property `duration` specifies the duration of the image, in seconds.
+
+In the time-dependent properties,
+the property `z` specifies the z-index of the image,
+which controls the whether an image is displayed above or below other images.
+Images with larger `z` values are displayed above images with smaller `z` values.
+The properties `anchorX` and `anchorY` specify the anchor point of the image,
+which is the point that the image rotates around
+and the point whose coordinates are specified by `x` and `y`.
+The default values of `anchorX` and `anchorY` are both `0.5`,
+which means the anchor point is at the center of the image.
+If they are both `0.0`, the anchor point is at the top-left corner of the image.
+
+### Global speed
+
+- **`type`**: `"globalSpeed"`.
+- **`properties`**:
+  - **`speed`**: float number.
+- **`timeDependent`**: none.
+
+Controls the global speed (of shrinking circles).
+You can set it to zero or negative values.
+
+Technically, you can use the time-dependent `circle` property
+in the notes to achieve any effects that this event can achieve,
+but this event is provided to reduce file sizes of chart files.
 
 ## Coordinate system
 
