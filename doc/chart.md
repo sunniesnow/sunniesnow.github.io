@@ -676,6 +676,11 @@ If they are both `0.0`, the anchor point is at the top-left corner of the image.
 Controls the global speed (of shrinking circles).
 You can set it to zero or negative values.
 
+The current global speed is used to scale the speed of shrinking circles of all notes
+before the earliest data point in their time-dependent `circle` properties.
+After the earliest data point,
+the global speed cannot affect the radii of the circles.
+
 Technically, you can use the time-dependent `circle` property
 in the notes to achieve any effects that this event can achieve,
 but this event is provided to reduce file sizes of chart files.

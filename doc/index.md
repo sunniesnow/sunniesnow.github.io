@@ -23,10 +23,13 @@ All file entires in the ZIP file should not be contained in any directory.
 At least one [music file](#music-file)
 and one [chart file](#chart-file) should be included.
 Other optional files includes
-[background files](#background-file) and
-[readme files](#readme-file).
-How a file will be treated is purely determined by its filename
-(mainly by its extension).
+[background files](#background-file),
+[readme files](#readme-file),
+and [storyboard assets](#storyboard-assets).
+Other than the storyboard assets,
+all the files are in the top level of the ZIP file tree,
+and how a file will is purely determined by its filename
+(mainly the filename extension).
 
 ### Music file
 
@@ -78,6 +81,13 @@ Other filenames that are recognized as readme files are those that start with (t
 
 Markdown files will be sanitized.
 Do not try to be a bad boy!
+
+### Storyboard assets
+
+Storyboard assets are files that are used in the storyboard.
+They are located in the `story/` directory in the ZIP file.
+Currently, only image files are supported,
+and they are used in the [`image`](chart.html#image) events in the charts.
 
 ## Mime type
 
