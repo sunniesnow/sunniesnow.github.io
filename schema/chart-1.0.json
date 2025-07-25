@@ -59,6 +59,150 @@
 				}
 			},
 			"additionalProperties": false
+		},
+		"scalableNumberTimeDependentProperty": {
+			"type": "object",
+			"properties": {
+				"value": { "type": "number" },
+				"dataPoints": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"required": ["time", "value"],
+						"properties": {
+							"time": { "type": "number" },
+							"value": { "type": "number" }
+						},
+						"additionalProperties": false
+					}
+				},
+				"scaleBy": { "$ref": "#/$defs/scaleByTypes", "default": "none" }
+			},
+			"additionalProperties": false
+		},
+		"scalableNumberOrArrayTimeDependentProperty": {
+			"type": "object",
+			"oneOf": [
+				{ "$ref": "#/$defs/scalableNumberTimeDependentProperty" },
+				{
+					"type": "object",
+					"properties": {
+						"value": { "type": "array", "items": { "type": "number" } },
+						"dataPoints": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"required": ["time", "value"],
+								"properties": {
+									"time": { "type": "number" },
+									"value": { "type": "array", "items": { "type": "number" } }
+								},
+								"additionalProperties": false
+							}
+						},
+						"scaleBy": { "$ref": "#/$defs/scaleByTypes", "default": "none" }
+					},
+					"additionalProperties": false
+				}
+			]
+		},
+		"filterEvents": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["time", "label", "duration"],
+				"properties": {
+					"time": { "type": "number" },
+					"label": { "type": "string" },
+					"duration": { "type": "number", "exclusiveMinimum": 0 },
+					"timeDependent": {
+						"type": "object",
+						"properties": {
+							"paddingX": { "$ref": "#/$defs/scalableNumberTimeDependentProperty" },
+							"paddingY": { "$ref": "#/$defs/scalableNumberTimeDependentProperty" }
+						},
+						"patternProperties": {
+							"^\\w+\\.\\w+$": { "$ref": "#/$defs/numberOrArrayTimeDependentProperty" },
+							"^\\w+$": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					}
+				}
+			}
+		},
+		"effectMultipleLayers": {
+			"type": "string",
+			"enum": [
+				"imagesAboveNone",
+				"background",
+				"imagesAboveBackground",
+				"bgPattern",
+				"imagesAboveBgPattern",
+				"hud",
+				"imagesAboveHud",
+				"fx",
+				"imagesAboveFx",
+				"judgementLine",
+				"imagesAboveJudgementLine",
+				"bgNotes",
+				"imagesAboveBgNotes",
+				"notes",
+				"imagesAboveNotes",
+				"circles",
+				"imagesAboveCircles",
+				"tipPoints",
+				"imagesAboveTipPoints",
+				"fxFront",
+				"imagesAboveFxFront"
+			]
+		},
+		"imageLayerAbove": {
+			"type": "string",
+			"enum": [
+				"none",
+				"background",
+				"bgPattern",
+				"hud",
+				"fx",
+				"judgementLine",
+				"bgNotes",
+				"notes",
+				"circles",
+				"tipPoints",
+				"fxFront"
+			]
+		},
+		"uniformTypes": {
+			"type": "string",
+			"enum": [
+				"f32",
+				"i32",
+				"vec2<f32>",
+				"vec3<f32>",
+				"vec4<f32>",
+				"mat2x2<f32>",
+				"mat3x3<f32>",
+				"mat4x4<f32>",
+				"mat3x2<f32>",
+				"mat4x2<f32>",
+				"mat2x3<f32>",
+				"mat4x3<f32>",
+				"mat2x4<f32>",
+				"mat3x4<f32>",
+				"vec2<i32>",
+				"vec3<i32>",
+				"vec4<i32>"
+			]
+		},
+		"scaleByTypes": {
+			"type": "string",
+			"enum": [
+				"none",
+				"chartUnitWidth",
+				"chartUnitHeight",
+				"canvasWidth",
+				"canvasHeight"
+			]
 		}
 	},
 	"title": "Sunniesnow Chart",
@@ -110,6 +254,71 @@
 				"additionalProperties": false
 			}
 		], "description": "Used for sscharter integration." },
+		"filters": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"gl": {
+							"type": "object",
+							"required": ["vertex", "fragment"],
+							"properties": {
+								"vertex": { "type": "string" },
+								"fragment": { "type": "string" }
+							},
+							"additionalProperties": false
+						},
+						"gpu": {
+							"type": "object",
+							"required": ["source", "vertexEntryPoint", "fragmentEntryPoint"],
+							"properties": {
+								"source": { "type": "string" },
+								"vertexEntryPoint": { "type": "string" },
+								"fragmentEntryPoint": { "type": "string" }
+							},
+							"additionalProperties": false
+						},
+						"resources": {
+							"type": "object",
+							"patternProperties": {
+								"^\\w+$": {
+									"type": "object",
+									"oneOf": [ {
+										"properties": {
+											"type": { "const": "uniforms" },
+											"uniforms": {
+												"type": "object",
+												"patternProperties": { "^\\w+$": { "$ref": "#/$defs/uniformTypes" } },
+												"additionalProperties": false
+											}
+										},
+										"required": ["type", "uniforms"],
+										"additionalProperties": false
+									}, {
+										"properties": {
+											"type": { "const": "texture" },
+											"samplerName": { "type": "string", "pattern": "^\\w+$" },
+											"uniformsName": { "type": "string", "pattern": "^\\w+$" },
+											"matrixName": { "type": "string", "pattern": "^\\w+$" },
+											"coordinateSystem": { "enum": ["canvas", "chart"], "default": "canvas" }
+										},
+										"required": ["type"],
+										"additionalProperties": false
+									} ]
+								}
+							},
+							"additionalProperties": false
+						},
+						"antialias": { "type": "string", "enum": ["inherit", "on", "off"], "default": "inherit" },
+						"blendMode": { "type": "string", "default": "normal" },
+						"blendRequired": { "type": "boolean", "default": false },
+						"resolution": { "oneOf": [ { "type": "number" }, { "const": "inherit" } ], "default": "inherit" }
+					}
+				}
+			}
+		},
 		"events": {
 			"description": "The events of the chart.",
 			"type": "array",
@@ -117,7 +326,6 @@
 			"items": {
 				"type": "object",
 				"required": ["type", "time", "properties"],
-				"additionalProperties": false,
 				"properties": {
 					"type": {
 						"type": "string",
@@ -137,7 +345,14 @@
 							"turntable",
 							"hexagram",
 							"image",
-							"globalSpeed"
+							"globalSpeed",
+							"effectBackground",
+							"effectTopLeftHud",
+							"effectTopRightHud",
+							"effectTopCenterHud",
+							"effectProgressBar",
+							"effectTipPoint",
+							"effectMultiple"
 						]
 					},
 					"time": { "type": "number", "description": "This specifies the time of the event, in seconds, measured from the start of the music." },
@@ -164,11 +379,26 @@
 							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"circleOpacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleRotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleBlendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
 							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
 						},
 						"additionalProperties": false
-					}
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} }, { "properties": {
 					"type": { "const": "hold" },
 					"properties": {
@@ -190,11 +420,26 @@
 							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"circleOpacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleRotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleBlendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
 							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
 						},
 						"additionalProperties": false
-					}
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} }, { "properties": {
 					"type": { "const": "drag" },
 					"properties": {
@@ -214,10 +459,25 @@
 							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
-							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" }
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"circleOpacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleRotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleBlendMode": { "$ref": "#/$defs/stringTimeDependentProperty" }
 						},
 						"additionalProperties": false
-					}
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} }, { "properties": {
 					"type": { "const": "flick" },
 					"properties": {
@@ -239,11 +499,26 @@
 							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"circleOpacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleRotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleBlendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
 							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
 						},
 						"additionalProperties": false
-					}
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} }, { "properties": {
 					"type": { "const": "placeholder" },
 					"properties": {
@@ -280,11 +555,20 @@
 							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
 							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
 						},
 						"additionalProperties": false
-					}
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} }, { "properties": {
 					"type": { "enum": [
 						"grid",
@@ -307,10 +591,19 @@
 							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
-							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" }
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" }
 						},
 						"additionalProperties": false
-					}
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} }, { "properties": {
 					"type": { "const": "bigText" },
 					"properties": {
@@ -327,11 +620,20 @@
 							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
 							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
 						},
 						"additionalProperties": false
-					}
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} }, { "properties": {
 					"type": { "const": "image" },
 					"properties": {
@@ -339,9 +641,11 @@
 							"filename": { "type": "string", "minLength": 1 },
 							"width": { "type": "number" },
 							"height": { "type": "number" },
-							"duration": { "type": "number", "exlusiveMinimum": 0 },
+							"duration": { "type": "number", "exclusiveMinimum": 0 },
 							"x": { "type": "number", "default": 0 },
-							"y": { "type": "number", "default": 0 }
+							"y": { "type": "number", "default": 0 },
+							"above": { "$ref": "#/$defs/imageLayerAbove", "default": "bgPattern" },
+							"coordinateSystem": { "enum": ["canvas", "chart"], "default": "chart" }
 						},
 						"required": ["filename", "width", "duration"],
 						"additionalProperties": false
@@ -354,12 +658,21 @@
 							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"width": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"height": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"anchorX": { "$ref": "#/$defs/numberTimeDependentProperty" },
 							"anchorY": { "$ref": "#/$defs/numberTimeDependentProperty" },
-							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" }
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" }
 						},
 						"additionalProperties": false
-					}
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} }, { "properties": {
 					"type": { "const": "globalSpeed" },
 					"properties": {
@@ -373,6 +686,211 @@
 						"properties": {},
 						"additionalProperties": false
 					}
+				} }, { "properties": {
+					"type": { "const": "effectBackground" },
+					"properties": {
+						"properties": {
+							"duration": { "type": "number", "exclusiveMinimum": 0 }
+						},
+						"required": ["duration"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
+				} }, { "properties": {
+					"type": { "const": "effectTopLeftHud" },
+					"properties": {
+						"properties": {
+							"duration": { "type": "number", "exclusiveMinimum": 0 }
+						},
+						"required": ["duration"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"data": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
+				} }, { "properties": {
+					"type": { "const": "effectTopRightHud" },
+					"properties": {
+						"properties": {
+							"duration": { "type": "number", "exclusiveMinimum": 0 }
+						},
+						"required": ["duration"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"data": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
+				} }, { "properties": {
+					"type": { "const": "effectTopCenterHud" },
+					"properties": {
+						"properties": {
+							"duration": { "type": "number", "exclusiveMinimum": 0 }
+						},
+						"required": ["duration"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"data": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
+				} }, { "properties": {
+					"type": { "const": "effectProgressBar" },
+					"properties": {
+						"properties": {
+							"duration": { "type": "number", "exclusiveMinimum": 0 }
+						},
+						"required": ["duration"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"data": { "$ref": "#/$defs/numberTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
+				} }, { "properties": {
+					"type": { "const": "effectTipPoint" },
+					"properties": {
+						"properties": {
+							"duration": { "type": "number", "exclusiveMinimum": 0 },
+							"tipPoint": { "type": "string" }
+						},
+						"required": ["duration", "tipPoint"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
+				} }, { "properties": {
+					"type": { "const": "effectMultiple" },
+					"properties": {
+						"properties": {
+							"duration": { "type": "number", "exclusiveMinimum": 0 },
+							"from": { "$ref": "#/$defs/effectMultipleLayers", "default": "imagesAboveNone" },
+							"to": { "$ref": "#/$defs/effectMultipleLayers", "default": "imagesAboveFxFront" }
+						},
+						"required": ["duration"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"pivotX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"pivotY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
 				} } ]
 			}
 		}
