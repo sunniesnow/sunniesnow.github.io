@@ -674,6 +674,22 @@ Zero angle is to the right, and increasing angle is counterclockwise
 
 The property `text` specifies the text displayed on the note.
 
+### `dragFlick`
+{:#drag-flick}
+
+- **`type`**: `"dragFlick"`.
+- **`properties`** except the [common ones](#note-properties):
+  - **`angle`**: float number.
+- **`timeDependent`** except the [common ones](#note-time-dependent): none.
+- **`filters`**: yes.
+
+A `dragFlick` event is a drag-flick note.
+The property `angle` specifies the angle of the flick part of the drag-flick note, in **radians**.
+Zero angle is to the right, and increasing angle is counterclockwise.
+
+Lyrica does not have drag-flick notes,
+but Sunniesnow supports them.
+
 ### `placeholder`
 {:#placeholder}
 
