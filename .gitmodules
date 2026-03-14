@@ -1,12 +1,14 @@
 [submodule "game"]
 	path = game
 	url = https://github.com/sunniesnow/sunniesnow
+	branch = stable
 [submodule "maker"]
 	path = maker
 	url = https://github.com/sunniesnow/sunniesnow-maker
 [submodule "doc/sscharter"]
 	path = doc/sscharter
 	url = https://github.com/sunniesnow/sscharter
+	branch = doc
 [submodule "game-unstable"]
 	path = game-unstable
 	url = https://github.com/sunniesnow/sunniesnow.git

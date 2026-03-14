@@ -839,13 +839,15 @@ It is one kind of background patterns
 that are displayed in the center of the screen.
 
 {% katexmm %}
-The vertices of the pentagon are
-$(50\cos(\pi/2+2k\pi/5),50\sin(\pi/2+2k\pi/5))$,
-where $k=0,1,2,3,4$.
-If you need more explicit expressions, they are
+The explicit expressions for the vertices of the pentagon are
 $$(0,50),\quad
-\left(\pm25\sqrt{\frac{5+\sqrt5}2},25\frac{\sqrt5-1}2\right),\quad
-\left(\pm25\sqrt{\frac{5-\sqrt5}2},25\frac{\sqrt5+1}2\right).$$
+\left(\pm10\sqrt{50-10\sqrt5},50\sqrt5-100\right),\quad
+\left(\pm20\sqrt{25-10\sqrt5},-50\right).$$
+The explicit expression for the center of the pentagon is $\left(0,20\sqrt5-50\right)$.
+
+The numerical values of the vertices are approximately
+$(0,50)$, $(\pm52.57,11.80)$, and $(\pm32.49,-50)$.
+The numerical value of the center is approximately $(0,-5.28)$.
 {% endkatexmm %}
 
 ### `turntable`
@@ -862,7 +864,7 @@ that are displayed in the center of the screen.
 
 {% katexmm %}
 The turntable has two circles concentric at $(0,0)$.
-Their radii are respectively $25$ and $50$.
+Their radii are respectively $28$ and $50$.
 {% endkatexmm %}
 
 ### `hexagram`
@@ -895,7 +897,8 @@ One of the triangles is upright, and the other is upside-down.
   - **`height` (optional)**: float number.
   - **`duration`**: non-negative float number.
   - **`above` (optional)**: the layer above which the image is shown (default: `"bgPattern"`).
-  - **`coordinateSystem`**: string (default: `"chart"`).
+  - **`coordinateSystem` (optional)**: `"chart"` or `"canvas"` (default: `"chart"`).
+  - **`mirrorable` (optional)**: boolean (default: `coordinateSystem === "chart"`).
 - **`timeDependent`**:
   - **`x`**: number (default `speed`: `0.0`).
   - **`y`**: number (default `speed`: `0.0`).
@@ -949,7 +952,7 @@ Possible values are:
 In the time-dependent properties,
 the property `z` specifies the z-index of the image,
 which controls the whether an image is displayed above or below other images.
-For images with teh same `above`,
+For images with the same `above`,
 those with larger `z` values are displayed above images with smaller `z` values.
 
 The properties `anchorX` and `anchorY` specify the anchor point of the image,
@@ -962,6 +965,15 @@ If they are both `0.0`, the anchor point is at the top-left corner of the image.
 The `rotation` property has the positive direction **counterclockwise**
 if `coordinateSystem` is `"chart"`,
 and the positive direction is **clockwise** if `coordinateSystem` is `"canvas"`.
+
+The `mirrorable` property specifies whether the image contents can be mirrored by the player settings
+`horizontal-flip` and `vertical-flip`.
+By default, it is `true` if `coordinateSystem` is `"chart"`, and `false` if `coordinateSystem` is `"canvas"`.
+If it is `true`, then the image contents can get mirrored by these player settings;
+otherwise, the image contents will not be mirrored.
+Notice that this property only affects the image contents
+and that whether its position and rotation can be mirrored by these player settings
+is always determined by `coordinateSystem`.
 
 ### `globalSpeed`
 {:#global-speed}
@@ -1181,7 +1193,7 @@ as in conventions in mathematics.
 To give you the sense of how large is a unit length,
 the radius of a note (except drag notes, which are smaller) is $12.5$.
 
-It is guaranteed that the area $[-137.5,137.5]\times[-75,75]$ is visible
+It is guaranteed that the area $[-125,125]\times[-75,75]$ is visible
 inside the screen
 (this is not the case in Lyrica),
 but it is recommended to keep all notes inside the area $[-100,100]\times[-50,50]$.
@@ -1189,7 +1201,21 @@ but it is recommended to keep all notes inside the area $[-100,100]\times[-50,50
 For those events that have `x` and `y` in their `properties`,
 the two numbers specify the Cartesian coordinates of the **center** of the event.
 
-TODO: canvas coordinates
+The canvas coordinate system is a different coordinate system.
+The origin is at the top-left corner of the screen.
+The positive direction of the $x$-axis is to the right,
+and the positive direction of the $y$-axis is to the bottom.
+The unit length of the $x$-axis is the width of the screen,
+and the unit length of the $y$-axis is the height of the screen.
+
+Notice that the direction of the $y$-axis is different for the two coordinate systems.
+A side effect of this is that the positive direction of rotation is different for the two coordinate systems.
+In the chart coordinate system, the positive direction of rotation is counterclockwise,
+but in the canvas coordinate system, the positive direction of rotation is clockwise.
+
+Another important difference between the two coordinate systems is that
+the chart coordinate system is affected by the player settings `horizontal-flip` and `vertical-flip`
+and that the canvas coordinate system is not.
 {% endkatexmm %}
 
 ## Tip points
