@@ -334,6 +334,8 @@
 							"hold",
 							"drag",
 							"flick",
+							"dragFlick",
+							"headOnlyHold",
 							"placeholder",
 							"bgNote",
 							"bigText",
@@ -367,7 +369,9 @@
 							"y": { "type": "number" },
 							"tipPoint": { "type": ["string", "null"], "default": null },
 							"text": { "type": "string", "default": "" },
-							"size": { "type": "number", "minimum": 0, "default": 1 }
+							"size": { "type": "number", "minimum": 0, "default": 1 },
+							"fake": { "type": "boolean", "default": false },
+							"doubleLine": { "type": "string", "enum": ["user", "always", "never"], "default": "user" }
 						},
 						"required": ["x", "y"],
 						"additionalProperties": false
@@ -408,7 +412,9 @@
 							"duration": { "type": "number", "exclusiveMinimum": 0 },
 							"tipPoint": { "type": ["string", "null"], "default": null },
 							"text": { "type": "string", "default": "" },
-							"size": { "type": "number", "minimum": 0, "default": 1 }
+							"size": { "type": "number", "minimum": 0, "default": 1 },
+							"fake": { "type": "boolean", "default": false },
+							"doubleLine": { "type": "string", "enum": ["user", "always", "never"], "default": "user" }
 						},
 						"required": ["x", "y", "duration"],
 						"additionalProperties": false
@@ -447,7 +453,9 @@
 							"x": { "type": "number" },
 							"y": { "type": "number" },
 							"tipPoint": { "type": ["string", "null"], "default": null },
-							"size": { "type": "number", "minimum": 0, "default": 1 }
+							"size": { "type": "number", "minimum": 0, "default": 1 },
+							"fake": { "type": "boolean", "default": false },
+							"doubleLine": { "type": "string", "enum": ["user", "always", "never"], "default": "user" }
 						},
 						"required": ["x", "y"],
 						"additionalProperties": false
@@ -487,9 +495,95 @@
 							"angle": { "type": "number" },
 							"tipPoint": { "type": ["string", "null"], "default": null },
 							"text": { "type": "string", "default": "" },
-							"size": { "type": "number", "minimum": 0, "default": 1 }
+							"size": { "type": "number", "minimum": 0, "default": 1 },
+							"fake": { "type": "boolean", "default": false },
+							"doubleLine": { "type": "string", "enum": ["user", "always", "never"], "default": "user" }
 						},
 						"required": ["x", "y", "angle"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"circleOpacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleRotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleBlendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"text": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
+				} }, { "properties": {
+					"type": { "const": "dragFlick" },
+					"properties": {
+						"properties": {
+							"x": { "type": "number" },
+							"y": { "type": "number" },
+							"angle": { "type": "number" },
+							"tipPoint": { "type": ["string", "null"], "default": null },
+							"size": { "type": "number", "minimum": 0, "default": 1 },
+							"fake": { "type": "boolean", "default": false },
+							"doubleLine": { "type": "string", "enum": ["user", "always", "never"], "default": "user" }
+						},
+						"required": ["x", "y", "angle"],
+						"additionalProperties": false
+					},
+					"timeDependent": {
+						"properties": {
+							"x": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"y": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circle": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"opacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"size": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"scaleY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewX": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"skewY": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"rotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"tintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"blendMode": { "$ref": "#/$defs/stringTimeDependentProperty" },
+							"circleOpacity": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleRotation": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintRed": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintGreen": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleTintBlue": { "$ref": "#/$defs/numberTimeDependentProperty" },
+							"circleBlendMode": { "$ref": "#/$defs/stringTimeDependentProperty" }
+						},
+						"additionalProperties": false
+					},
+					"filters": { "$ref": "#/$defs/filterEvents" }
+				} }, { "properties": {
+					"type": { "const": "headOnlyHold" },
+					"properties": {
+						"properties": {
+							"x": { "type": "number" },
+							"y": { "type": "number" },
+							"duration": { "type": "number", "exclusiveMinimum": 0 },
+							"tipPoint": { "type": ["string", "null"], "default": null },
+							"text": { "type": "string", "default": "" },
+							"size": { "type": "number", "minimum": 0, "default": 1 },
+							"fake": { "type": "boolean", "default": false },
+							"doubleLine": { "type": "string", "enum": ["user", "always", "never"], "default": "user" }
+						},
+						"required": ["x", "y", "duration"],
 						"additionalProperties": false
 					},
 					"timeDependent": {
@@ -645,10 +739,16 @@
 							"x": { "type": "number", "default": 0 },
 							"y": { "type": "number", "default": 0 },
 							"above": { "$ref": "#/$defs/imageLayerAbove", "default": "bgPattern" },
-							"coordinateSystem": { "enum": ["canvas", "chart"], "default": "chart" }
+							"coordinateSystem": { "enum": ["canvas", "chart"], "default": "chart" },
+							"mirrorable": { "type": "boolean" }
 						},
 						"required": ["filename", "width", "duration"],
-						"additionalProperties": false
+						"additionalProperties": false,
+						"allOf": [ {
+							"if": { "properties": { "coordinateSystem": { "const": "chart" } } },
+							"then": { "properties": { "mirrorable": { "default": true } } },
+							"else": { "properties": { "mirrorable": { "default": false } } }
+						} ]
 					},
 					"timeDependent": {
 						"properties": {

@@ -238,6 +238,8 @@ Here is a list of possible values:
 - [`"hold"`](#hold),
 - [`"drag"`](#drag),
 - [`"flick"`](#flick),
+- [`"dragFlick"`](#drag-flick),
+- [`"headOnlyHold"`](#head-only-hold),
 - [`"placeholder"`](#placeholder),
 - [`"bgNote"`](#bg-note),
 - [`"bigText"`](#big-text),
@@ -288,12 +290,14 @@ See [Event types](#event-types) for more information.
 {:#note-properties}
 
 These are the properties that are common to all types of notes
-(`tap`, `hold`, `drag`, `flick`, and `bgNote`):
+(`tap`, `hold`, `drag`, `flick`, `dragFlick`, `headOnlyHold`, `bgNote`):
 
 - **`x`**: float number.
 - **`y`**: float number.
 - **`tipPoint` (optional)**: nullable string (default: `null`).
 - **`size` (optional)**: float number (default: `1.0`).
+- **`fake`**: boolean (default: `false`; not applicable to `bgNote`).
+- **`doubleLine`**: one of `"user"`, `"always"`, and `"never"` (default: `"user"`; not applicable to `bgNote`).
 
 The properties `x` and `y` specify the judgement coordinates of the note,
 in the chart coordinate system.
@@ -304,6 +308,11 @@ then the note will be connected by a tip point.
 See [Tip points](#tip-points) for more information.
 
 The property `size` scales the size of the judgement area.
+
+The property `fake` specifies whether the note is fake.
+Fake notes do not have judgements, combos, and FX.
+
+The property `doubleLine` specifies whether the note can have simultaneity hints.
 
 #### Common to all background patterns
 {:#bg-pattern-properties}
@@ -689,6 +698,20 @@ Zero angle is to the right, and increasing angle is counterclockwise.
 
 Lyrica does not have drag-flick notes,
 but Sunniesnow supports them.
+
+### `headOnlyHold`
+{:#head-only-hold}
+
+- **`type`**: `"headOnlyHold"`.
+- **`properties`** except the [common ones](#note-properties):
+  - **`text` (optional)**: string (default: `""`).
+  - **`duration`**: positive float number.
+- **`timeDependent`** except the [common ones](#note-time-dependent):
+  - **`text`**: string.
+- **`filters`**: yes.
+
+A `headOnlyHold` event is a head-only hold note.
+The property `duration` specifies the duration of the head-only hold note, in seconds.
 
 ### `placeholder`
 {:#placeholder}
