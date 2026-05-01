@@ -8,5 +8,5 @@ group :jekyll_plugins do
 end
 
 group :develop do
-	gem "rake", "~> 13.3"
+	gem "rake", "~> 13.4"
 end
