@@ -10,3 +10,8 @@ end
 group :develop do
 	gem "rake", "~> 13.4"
 end
+
+install_if(-> { RUBY_PLATFORM =~ /mingw|mswin/ }) do
+	gem 'tzinfo'
+	gem 'tzinfo-data'
+end

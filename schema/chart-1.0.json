@@ -492,7 +492,7 @@
 						"properties": {
 							"x": { "type": "number" },
 							"y": { "type": "number" },
-							"angle": { "type": "number" },
+							"angle": { "oneOf": [{ "type": "number" }, { "type": "array", "items": { "type": "number" }, "minItems": 1 }] },
 							"tipPoint": { "type": ["string", "null"], "default": null },
 							"text": { "type": "string", "default": "" },
 							"size": { "type": "number", "minimum": 0, "default": 1 },
@@ -535,7 +535,7 @@
 						"properties": {
 							"x": { "type": "number" },
 							"y": { "type": "number" },
-							"angle": { "type": "number" },
+							"angle": { "oneOf": [{ "type": "number" }, { "type": "array", "items": { "type": "number" }, "minItems": 1 }] },
 							"tipPoint": { "type": ["string", "null"], "default": null },
 							"size": { "type": "number", "minimum": 0, "default": 1 },
 							"fake": { "type": "boolean", "default": false },

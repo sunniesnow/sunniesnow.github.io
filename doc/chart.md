@@ -669,7 +669,7 @@ A `drag` event is a drag note.
 
 - **`type`**: `"flick"`.
 - **`properties`** except the [common ones](#note-properties):
-  - **`angle`**: float number.
+  - **`angle`**: float number or array of at least one float numbers.
   - **`text` (optional)**: string (default: `""`).
 - **`timeDependent`** except the [common ones](#note-time-dependent):
   - **`text`**: string.
@@ -677,7 +677,7 @@ A `drag` event is a drag note.
 
 A `flick` event is a flick note.
 
-The property `angle` specifies the angle of the flick note, in **radians**.
+The property `angle` specifies the angle(s) of the flick note, in **radians**.
 Zero angle is to the right, and increasing angle is counterclockwise
 (as in conventions of mathematics about polar coordinates).
 
@@ -688,12 +688,12 @@ The property `text` specifies the text displayed on the note.
 
 - **`type`**: `"dragFlick"`.
 - **`properties`** except the [common ones](#note-properties):
-  - **`angle`**: float number.
+  - **`angle`**: float number or array of at least one float numbers.
 - **`timeDependent`** except the [common ones](#note-time-dependent): none.
 - **`filters`**: yes.
 
 A `dragFlick` event is a drag-flick note.
-The property `angle` specifies the angle of the flick part of the drag-flick note, in **radians**.
+The property `angle` specifies the angle(s) of the drag-flick note, in **radians**.
 Zero angle is to the right, and increasing angle is counterclockwise.
 
 Lyrica does not have drag-flick notes,
