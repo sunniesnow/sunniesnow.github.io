@@ -33,7 +33,12 @@ exclude:
   - Gemfile.lock
   - "**/.git/"
   - "**/.idea/"
+  - "**/.github/"
   - ".rubocop.yml"
+  - "**/package.json"
+  - "**/node_modules/"
+  - "**/scripts/"
+  - "**/tests/"
 plugins:
   - jekyll-seo-tag
   - gen_katex
