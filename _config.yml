@@ -9,6 +9,7 @@ locale: en_US
 baseurl: ''
 url: https://sunniesnow.github.io
 domain: sunniesnow.github.io
+git_repo: https://github.com/sunniesnow/sunniesnow.github.io
 logo: /favicon.svg
 theme_color: '#ffa520'
 social_links:

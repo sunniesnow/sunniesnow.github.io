@@ -6,6 +6,11 @@ module Jekyll
 		def dirname input
 			File.dirname input
 		end
+
+		def env input
+			ENV[input]
+		end
 	end
 end
+
 Liquid::Template.register_filter Jekyll::UlyssesZhan::Filters

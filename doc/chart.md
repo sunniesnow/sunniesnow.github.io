@@ -126,7 +126,7 @@ It is an object with arbitrary string keys
 and each value is a filter object,
 which contains the definition of the filter.
 Events can refer to these filters by their labels
-in the [`filters`](#event-filters) key in the event object.
+in the [`filters`](#event-filters) object in the event object.
 
 A filter object is an object with the following keys:
 
@@ -136,15 +136,23 @@ A filter object is an object with the following keys:
 - **`antialias`**: one of `"inherit"`, `"on"`, and `"off"` (default: `"inherit"`).
 - **`blendMode`**: one of the blend modes supported by the game (default: `"normal"`).
 - **`blendRequired`**: boolean (default: `false`).
-  Turning this one makes a uniform `uBackTexture` available in the shader
+  Turning this on makes a uniform `uBackTexture` available in the shader
   but will also impact the performance of the filter because there is an additional GPU copy.
 - **`resolution`**: either a number or `"inherit"`.
   Default: `"inherit"`.
 
-TODO
+#### `gl`
+{:#filters-gl}
 
-The preamble of any vertex shader of WebGL
-(where `the-label` is replaced by the actual label set by the key in the `filters` object):
+The `gl` object has the following keys:
+
+- **`vertex`**: a string that contains the vertex shader.
+- **`fragment`**: a string that contains the fragment shader.
+
+The shader contents can use [Liquid](#liquid-in-shaders).
+
+The following contents are always put at the start of a vertex shader by PixiJS
+(where `the-label` is the label of the filter):
 
 ```glsl
 #define SHADER_NAME the-label-vertex
@@ -154,25 +162,9 @@ The preamble of any vertex shader of WebGL
 #define out varying
 #endif
 precision highp float;
-
-in vec2 aPosition;
-out vec2 vTextureCoord;
-uniform vec4 uInputSize;
-uniform vec4 uOutputFrame;
-uniform vec4 uOutputTexture;
-vec4 filterVertexPosition(void) {
-	vec2 position = aPosition * uOutputFrame.zw + uOutputFrame.xy;
-	position.x = position.x * (2.0 / uOutputTexture.x) - 1.0;
-	position.y = position.y * (2.0*uOutputTexture.z / uOutputTexture.y) - uOutputTexture.z;
-	return vec4(position, 0.0, 1.0);
-}
-vec2 filterTextureCoord(void) {
-	return aPosition * (uOutputFrame.zw * uInputSize.zw);
-}
 ```
 
-The preamble of any fragment shader of WebGL
-(where `the-label` is replaced by the actual label set by the key in the `filters` object):
+The following contents are always put at the start of a fragment shader by PixiJS:
 
 ```glsl
 #define SHADER_NAME the-label-fragment
@@ -183,13 +175,169 @@ The preamble of any fragment shader of WebGL
 #define texture texture2D
 #endif
 precision mediump float;
-
-in vec2 vTextureCoord;
-//out vec4 finalColor;
-uniform sampler2D uTexture;
 ```
 
-The preamble of any shader of WebGPU:
+Additionally, `out vec4 finalColor;` is deleted if it appears in a WebGL 2 fragment shader.
+
+#### `gpu`
+{:#filters-gpu}
+
+The `gpu` object has the following keys:
+
+- **`source`**: a string that contains the shader source.
+- **`vertexEntryPoint`**: a string that specifies the entry point function name of the vertex shader.
+- **`fragmentEntryPoint`**: a string that specifies the entry point function of the fragment shader.
+
+The entry point functions should be defined in the source.
+The source contents can use [Liquid](#liquid-in-shaders).
+
+#### `resources`
+{:#filters-resources}
+
+The `resources` object can contain any identifier keys for different resources.
+Each resource object is either uniforms or texture.
+This part should be understood as the declaration of parameters that the filter needs.
+It does not specify their actual values when the filter is used,
+but the [`filters`](#event-filters) object of events does.
+
+The keys of a uniforms resource are:
+
+- **`type`**: `"uniforms"`.
+- **`uniforms`**: an object whose keys are uniform variable names and whose values are type definitions.
+- **`structName` (optional)**:
+  a string that specifies the struct type name used in WebGPU shader
+  (default: capitalization of the key of this uniforms resource object).
+
+The supported type definitions include `bool`, `i32`, `u32`, `f32`,
+and their `vec*<*>` and `mat*x*<*>` variants.
+The `f32` type is changed into `float` in WebGL shader,
+to change whose precision you need to prefix the type with
+`lowp`, `mediump`, or `highp`, which is useless in WebGPU shader.
+For example, `highp vec2<f32>` becomes `highp vec2` in WebGL shader
+and `vec2<f32>` in WebGPU shader.
+
+The keys of a texture resource are:
+
+- **`type`**: `"texture"`.
+- **`samplerName`**: a string specifying the variable name for the sampler in WebGPU shader.
+- **`uniformsName`**: a string specifying the variable name for the uniforms struct in WebGPU shader.
+- **`uniformsStructName` (optional)**:
+  a string that specifies the struct type name for the uniforms struct in WebGPU shader
+  (default: capitalization of the value of `uniformsName`).
+- **`matrixName`**: a string specifying the variable name for the transformation matrix of the sprite showing this texture.
+- **`coordinateSystem`**: one of `"canvas"` and `"chart"`,
+  specifying which [coordinate system](#coordinate-system) is used to specify the position
+  of the sprite showing this texture.
+
+#### Liquid in shaders
+
+Liquid is a templating language.
+Liquid in Sunniesnow is powered by [LiquidJS](https://liquidjs.com).
+As shaders are in low-level languages (GLSL or WGSL),
+a templating language often helps.
+
+The following Liquid variables are available:
+
+- **`environment`**: one of `"gl-vertex"`, `"gl-fragment"`, and `"gpu"`.
+- **`label`**: the label of the filter.
+- **`resources`**: the [`resources`](#filters-resources) object defined for the filter.
+- **`options`**: an object containing the other options of the filter:
+  `antialias`, `blendMode`, `blendRequired`, and `resolution`.
+- **`settings`**: user settings of Sunniesnow, whose keys are in camel case.
+  See [Sunniesnow help](/game-unstable/help.html) for details.
+- **`config`**: global configuration of Sunniesnow.
+  Some useful keys are `WIDTH` (canvas width), `HEIGHT` (canvas height),
+  `SCALE` (length in canvas coordinate system per unit length in chart coordinate system).
+
+In addition to the standard Liquid filters provided by LiquidJS,
+the following Liquid filters are available:
+
+- **`gl_type`**: converts a type definition in [`resources`](#filters-resources) to GLSL type definition.
+- **`gpu_type`**: converts a type definition in [`resources`](#filters-resources) to WGSL type definition.
+
+In addition to the standard Liquid tags provided by LiquidJS,
+the following Liquid tags are available:
+
+- **`preamble`**: shader codes containing declarations of uniforms
+  and definitions of some commonly used functions.
+- **`trivial_vertex`**: shader codes defining the main function of a trivial vertex shader.
+- **`trivial_fragment`**: shader codes defining the main function of a trivial fragment shader.
+
+The following are examples of the contents replacing
+`{% raw %}{% preamble %}{% endraw %}`.
+They include declarations of user-defined uniforms specified in `resources`,
+taking this as the example `resources` object:
+
+```json
+{
+	"myUniforms": {
+		"type": "uniforms",
+		"uniforms": {
+			"uScale": "vec2<f32>"
+		}
+	},
+	"uMapTexture": {
+		"type": "texture",
+		"samplerName": "uMapSampler",
+		"uniformsName": "mapUniforms",
+		"matrixName": "uMapMatrix",
+		"coordinateSystem": "canvas"
+	}
+}
+```
+
+The examples also assume that the label of the filter is `the-label`.
+The examples also assume that all the variables and functions are actually used after the preamble;
+in real cases, usually many of them are not mentioned in the shader,
+which will be omitted in the preamble because some GL program linkers do not accept unused uniforms.
+The uniform `uBackTexture` is also included in the examples,
+but it is only usable if `blendRequired` is `true`.
+
+The preamble of a vertex shader of WebGL:
+
+```glsl
+in vec2 aPosition;
+out vec2 vTextureCoord;
+
+uniform highp vec4 uInputSize;
+uniform vec4 uInputPixel;
+uniform vec4 uInputClamp;
+uniform vec4 uOutputFrame;
+uniform vec4 uOutputTexture;
+uniform sampler2D uTexture;
+uniform sampler2D uBackTexture;
+
+vec4 filterVertexPosition(void) {
+	vec2 position = aPosition * uOutputFrame.zw + uOutputFrame.xy;
+	position.x = position.x * (2.0 / uOutputTexture.x) - 1.0;
+	position.y = position.y * (2.0*uOutputTexture.z / uOutputTexture.y) - uOutputTexture.z;
+	return vec4(position, 0.0, 1.0);
+}
+
+vec2 filterTextureCoord(void) {
+	return aPosition * (uOutputFrame.zw * uInputSize.zw);
+}
+
+// User-defined uniforms
+uniform vec2 uScale;
+uniform sampler2D uMapTexture;
+uniform mat3 uMapMatrix;
+vec2 uMapTextureCoord(void) {
+	return (uMapMatrix * vec3(filterTextureCoord(), 1.0)).xy;
+}
+```
+
+The preamble of a fragment shader of WebGL:
+
+```glsl
+in vec2 vTextureCoord;
+out vec4 finalColor;
+
+uniform highp vec4 uInputSize;
+// ... The rest are the same as a vertex shader
+```
+
+The preamble of a shader of WebGPU:
 
 ```wgsl
 struct GlobalFilterUniforms {
@@ -203,20 +351,77 @@ struct GlobalFilterUniforms {
 @group(0) @binding(0) var<uniform> gfu: GlobalFilterUniforms;
 @group(0) @binding(1) var uTexture: texture_2d<f32>;
 @group(0) @binding(2) var uSampler: sampler;
+
 fn filterVertexPosition(aPosition: vec2<f32>) -> vec4<f32> {
 	var position = aPosition * gfu.uOutputFrame.zw + gfu.uOutputFrame.xy;
 	position.x = position.x * (2.0 / gfu.uOutputTexture.x) - 1.0;
 	position.y = position.y * (2.0 * gfu.uOutputTexture.z / gfu.uOutputTexture.y) - gfu.uOutputTexture.z;
 	return vec4(position, 0.0, 1.0);
 }
+
 fn filterTextureCoord(aPosition: vec2<f32>) -> vec2<f32> {
 	return aPosition * (gfu.uOutputFrame.zw * gfu.uInputSize.zw);
 }
+
 fn globalTextureCoord(aPosition: vec2<f32>) -> vec2<f32> {
 	return aPosition.xy / gfu.uGlobalFrame.zw + gfu.uGlobalFrame.xy / gfu.uGlobalFrame.zw;
 }
+
 fn getSize() -> vec2<f32> {
 	return gfu.uGlobalFrame.zw;
+}
+
+// User-defined uniforms
+struct MyUniforms {
+	uScale: vec2<f32>,
+};
+@group(1) @binding(0) var<uniform> myUniforms: MyUniforms;
+@group(1) @binding(1) var uMapTexture: texture_2d<f32>;
+@group(1) @binding(2) var uMapSampler: sampler;
+struct MapUniforms {
+	uMapMatrix: mat3x3<f32>,
+};
+@group(1) @binding(3) var<uniform> mapUniforms: MapUniforms;
+fn uMapTextureCoord(aPosition: vec2<f32>) -> vec2<f32> {
+	return (mapUniforms.uMapMatrix * vec3(filterTextureCoord(aPosition), 1.0)).xy;
+}
+```
+
+Here are the contents replacing `{% raw %}{% trivial_vertex %}{% endraw %}` in WebGL shader:
+
+```glsl
+void main(void) {
+	gl_Position = filterVertexPosition();
+	vTextureCoord = filterTextureCoord();
+}
+```
+
+Here are the contents replacing `{% raw %}{% trivial_fragment %}{% endraw %}` in WebGL shader:
+
+```glsl
+void main(void) {
+	finalColor = texture(uTexture, vTextureCoord);
+}
+```
+
+Here are the contents replacing `{% raw %}{% trivial_vertex %}{% endraw %}` in WebGPU shader:
+
+```wgsl
+struct VSOutput {
+	@builtin(position) position: vec4<f32>,
+	@location(0) uv: vec2<f32>
+};
+
+@vertex fn mainVertex(@location(0) aPosition: vec2<f32>,) -> VSOutput {
+	return VSOutput(filterVertexPosition(aPosition), filterTextureCoord(aPosition));
+}
+```
+
+Here are the contents replacing `{% raw %}{% trivial_fragment %}{% endraw %}` in WebGPU shader:
+
+```wgsl
+@fragment fn mainFragment(@location(0) uv: vec2<f32>, @builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
+	return textureSample(uTexture, uSampler, uv);
 }
 ```
 
@@ -613,10 +818,61 @@ The `rotation` property has the positive direction **clockwise**.
 ### `filters`
 {:#event-filters}
 
+Most event types accept filters.
+The value of `filters` is an array of filter objects with the following keys:
+
+- **`time`**: number, the time at which the filter starts being active.
+- **`label`**: string, the label of the filter, determining which filter to use,
+  corresponding to the label set in chart [`filters`](#chart-filters).
+- **`duration`**: number, the duration for which the filter stays active.
+- **`timeDependent`**: object, whose keys specify how the parameters (uniforms, textures, and other parameters)
+  of the shader change over time.
+
+The `timeDependent` object may have the following keys:
+
+- **`paddingX`**: time-dependent number.
+- **`paddingY`**: time-dependent number.
+- **`<uniforms>.<uniform>`**: time-dependent number (for `f32`) or time-dependent array (for `vec*<*>` and `mat*x*<*>`).
+- **`<texture>`**: time-dependent string.
+- **`<texture>.*`**: time-dependent number, where `*` may be `x`, `y`, `width`, `height`, `rotation`,
+  `scaleX`, `scaleY`, `skewX`, `skewY`, `anchorX`, `anchorY`.
+
+A time-dependent number or array is an object that may contain the following keys:
+
+- **`value`**.
+- **`dataPoints`**.
+- **`scaleBy`**: one of `"none"`, `"chartUnitWidth"`, `"chartUnitHeight"`, `"canvasWidth"`,
+  `"canvasHeight"` (default: `"none"`).
+
+The `value` and `dataPoints` key have the same convention and semantics as
+those for [`timeDependent`](#event-time-dependent) objects.
+The only difference is that uniforms may be time-dependent arrays,
+for which `value` and `value` in `dataPoints` elements should be arrays of correct sizes.
+
+A time-dependent string is the same as a time-dependent string in [`timeDependent`](#event-time-dependent) objects.
+
+The placeholder `<uniforms>` and `<texture>` correspond to keys in chart [`filters`](#chart-filters) object.
+The placeholder `<uniform>` corresponds to keys in the type definition of the uniform variables in chart `filters` object.
+
+When `scaleBy` is not `"none"`, the actual values seen by the shaders are scaled by a constant.
+For `"chartUnitWidth"` or `"chartUnitHeight"`, the magnitude of the scaling factor
+is the length in canvas coordiante system per unit length in chart coordinate system,
+and it is negative if the chart is flipped in the corresponding direction
+(`"chartUnitWidth"` has negative scale when horizontal flip is on; similarly for `"chartUnitHeight"`).
+For `"canvasWidth"` or `"canvasHeight"`, the scaling factor is the total width or height
+of the canvas in the canvas coordinate system.
+
+The parameters `paddingX` and `paddingY` specifies a larger texture area for the shader to work with
+than the original visual appearance of the affected UI elements.
+The rationale is that some filters need writing to pixels outside the original UI elements;
+for example, a blurring effect makes the colors spread out so that the UI elements appear larger.
+
+The value of `<texture>` is the filename in `story` dir of the level file
+from which the texture is loaded, similarly to the `filename` property of [`image`](#image) events.
+The other `<texture>.*` values are also similar to those in the `timeDependent` object of an `image` event.
+
 Because filters basically replace a few layers with a whole rendered texture,
 blend modes of objects inside those layers may not work properly.
-
-TODO
 
 ## Event types
 
