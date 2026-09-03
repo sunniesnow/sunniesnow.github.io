@@ -22,7 +22,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1 # v1.146.0
         with:
-          ruby-version: 3.4
+          ruby-version: '4'
           bundler-cache: true
           cache-version: 0
       - name: Setup Pages
@@ -33,6 +33,7 @@ jobs:
         env:
           JEKYLL_ENV: production
           GITHUB_RUN_ID: ${{ github.run_id }}
+          TZ: Asia/Shanghai
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
 
