@@ -263,6 +263,12 @@ the following Liquid tags are available:
 - **`trivial_vertex`**: shader codes defining the main function of a trivial vertex shader.
 - **`trivial_fragment`**: shader codes defining the main function of a trivial fragment shader.
 
+For WebGL shaders,
+the contents replacing the `preamble` tag automaticaly omits declarations/definitions of variables and functions
+that are not mentioned in the shader.
+It also accepts an argument: a list of comma separated names for which the declarations of the variables and functions
+are forcibly omitted even if they are mentioned in the shader.
+
 The following are examples of the contents replacing
 `{% raw %}{% preamble %}{% endraw %}`.
 They include declarations of user-defined uniforms specified in `resources`,
@@ -386,6 +392,10 @@ fn uMapTextureCoord(aPosition: vec2<f32>) -> vec2<f32> {
 	return (mapUniforms.uMapMatrix * vec3(filterTextureCoord(aPosition), 1.0)).xy;
 }
 ```
+
+The `trivial_vertex` or `trivial_fragment` tag accepts an argument specifying the function name of the main function.
+It is `main` by default for WebGL shaders,
+and it is respectively `mainVertex` or `mainFragment` for WebGPU shaders.
 
 Here are the contents replacing `{% raw %}{% trivial_vertex %}{% endraw %}` in WebGL shader:
 
@@ -1515,3 +1525,212 @@ or at zero speed
 
 In Lyrica, there is no such notion as `placeholder`,
 and `bgNote` is not tip-pointable.
+
+## Example filters
+
+### Alpha filter
+
+The alpha filter makes the applied UI elements appear translucent.
+The uniform `myUniforms.uAlpha` controls the opacity.
+
+In chart [`filters`](#chart-filters), define the filter as follows:
+
+```json
+{
+	// other chart properties...
+	"filters": {
+		"alpha": {
+			"gl": {
+				"vertex": "...", // see below
+				"fragment": "..." // see below
+			},
+			"gpu": {
+				"source": "...", // see below
+				"vertexEntryPoint": "mainVertex",
+				"fragmentEntryPoint": "mainFragment"
+			},
+			"resources": {
+				"myUniforms": {
+					"type": "uniforms",
+					"uniforms": {
+						"uAlpha": "f32"
+					}
+				}
+			}
+		}
+		// other filters...
+	}
+}
+```
+
+The omitted chart sources are listed below.
+The contents of `filters.alpha.gl.vertex` is
+
+{% raw -%}
+```glsl
+{% preamble %}
+{% trivial_vertex %}
+```
+{%- endraw %}
+
+The contents of `filters.alpha.gl.fragment` is
+
+{% raw %}
+```glsl
+{% preamble %}
+void main(){
+	finalColor = texture(uTexture, vTextureCoord) * uAlpha;
+}
+```
+{% endraw %}
+
+The contents of `filters.alpha.gpu.source` is
+
+{% raw %}
+```wgsl
+{% preamble %}
+{% trivial_vertex %}
+@fragment fn mainFragment(@location(0) uv: vec2<f32>, @builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
+	return textureSample(uTexture, uSampler, uv) * myUniforms.uAlpha;
+}
+```
+{% endraw %}
+
+When applying this filter, add this object to the event [`filters`](#event-filters) list:
+
+```json
+{
+	"time": 0.875,
+	"label": "alpha",
+	"duration": 1,
+	"timeDependent": {
+		"myUniforms.uAlpha": {
+			"dataPoints": [
+				{"time": 0.875, "value": 0},
+				{"time": 1.875, "value": 1}
+			]
+		}
+	}
+}
+```
+
+This filter makes the opacity of the applied event change from 0 at time 0.875 to 1 at time 1.875.
+
+### Displacement filter
+
+The displacement filter takes a texture as input and alters the applied event by distorting it
+according to the displacement field specified by the texture.
+The x and y components of the displacement field are the red and green channel values in the input texture.
+
+```json
+{
+	// other chart properties...
+	"filters": {
+		"displacement": {
+			"gl": {
+				"vertex": "...", // see below
+				"fragment": "..." // see below
+			},
+			"gpu": {
+				"source": "...", // see below
+				"vertexEntryPoint": "mainVertex",
+				"fragmentEntryPoint": "mainFragment"
+			},
+			"resources": {
+				"myUniforms": {
+					"type": "uniforms",
+					"uniforms": {
+						"uScale": "vec2<f32>"
+					}
+				},
+				"uMapTexture": {
+					"type": "texture",
+					"samplerName": "uMapSampler",
+					"uniformsName": "mapUniforms",
+					"matrixName": "uMapMatrix",
+					"coordinateSystem": "canvas"
+				}
+			}
+		}
+		// other filters...
+	}
+}
+```
+
+WebGL vertex:
+
+{% raw %}
+```glsl
+{% preamble %}
+out vec2 vFilterUv;
+void main(void) {
+	gl_Position = filterVertexPosition();
+	vTextureCoord = filterTextureCoord();
+	vFilterUv = uMapTextureCoord();
+}
+```
+{% endraw %}
+
+WebGL fragment:
+
+{% raw %}
+```glsl
+{% preamble %}
+in vec2 vFilterUv;
+void main() {
+	vec4 map = texture(uMapTexture, vFilterUv);
+	vec2 offset = uInputSize.zw * (map.xy - 0.5) * uScale;
+	finalColor = texture(uTexture, clamp(vTextureCoord + offset, uInputClamp.xy, uInputClamp.zw));
+}
+```
+{% endraw %}
+
+WebGPU:
+
+{% raw %}
+```wgsl
+{% preamble %}
+struct VSOutput {
+	@builtin(position) position: vec4<f32>,
+	@location(0) uv: vec2<f32>,
+	@location(1) filterUv: vec2<f32>
+};
+@vertex fn mainVertex(@location(0) aPosition: vec2<f32>,) -> VSOutput {
+	return VSOutput(filterVertexPosition(aPosition), filterTextureCoord(aPosition), uMapTextureCoord(aPosition));
+}
+@fragment fn mainFragment(@location(0) uv: vec2<f32>, @location(1) filterUv: vec2<f32>, @builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
+	var map = textureSample(uMapTexture, uMapSampler, filterUv);
+	var offset = gfu.uInputSize.zw * (map.xy - 0.5) * myUniforms.uScale;
+	return textureSample(uTexture, uSampler, clamp(uv + offset, gfu.uInputClamp.xy, gfu.uInputClamp.zw));
+}
+```
+{% endraw %}
+
+To apply the filter:
+
+```json
+{
+	"time": 0,
+	"label": "displacement",
+	"duration": 2,
+	"timeDependent": {
+		"myUniforms.uScale": {
+			"dataPoints": [
+				{"time": 0, "value": [0, 0]},
+				{"time": 1, "value": [0.2, 0.2]},
+				{"time": 2, "value": [0, 0]}
+			],
+			"scaleBy": "canvasWidth"
+		},
+		"uMapTexture": {"value": "displacement.svg"},
+		"uMapTexture.width": {
+			"dataPoints": [
+				{"time": 0, "value": 0},
+				{"time": 1, "value": 1},
+				{"time": 2, "value": 0}
+			]
+		},
+		"uMapTexture.height": {"value": 1}
+	}
+}
+```
